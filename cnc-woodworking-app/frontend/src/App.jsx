@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
+import JointViewer3D from './components/JointViewer3D'
+import TableViewer3D from './components/TableViewer3D'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/generate'
 const UNITS_OPTIONS = ['inches', 'millimeters']
@@ -43,6 +45,8 @@ const styles = {
   dimVal:      { color: '#333' },
   dimKey:      { color: '#888', marginRight: 2 },
   gcodeBar:    { display: 'flex', justifyContent: 'flex-end', marginBottom: 12 },
+  toggle:      { background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: GREEN, fontFamily: 'inherit' },
+  toggleArrow: { display: 'inline-block', width: 14, textAlign: 'center', fontSize: 14, color: GREEN },
 }
 
 function JointDetail({ joint }) {
@@ -77,6 +81,37 @@ function JointDetail({ joint }) {
   )
 }
 
+// Find the mortise + tenon pair to visualize for a given part. Mortises live on
+// legs and carry the rail's name as `label`; tenons live on rails. To draw both
+// halves of a joint we walk all parts to pull the counterpart.
+function viewerPropsFor(part, allParts) {
+  const first = part.joints?.[0]
+  if (!first) return null
+
+  let mortiseDims, tenonDims, legPart, railPart
+  if (first.type === 'mortise') {
+    mortiseDims = first.dimensions
+    legPart  = part
+    railPart = allParts.find(p => p.partName === first.label && p.joints?.some(j => j.type === 'tenon'))
+    tenonDims = railPart?.joints?.find(j => j.type === 'tenon')?.dimensions
+  } else if (first.type === 'tenon') {
+    tenonDims = first.dimensions
+    railPart = part
+    legPart  = allParts.find(p => p.joints?.some(j => j.type === 'mortise' && j.label === part.partName))
+    mortiseDims = legPart?.joints?.find(j => j.type === 'mortise' && j.label === part.partName)?.dimensions
+  } else {
+    return null
+  }
+
+  if (!mortiseDims || !tenonDims) return null
+  return {
+    mortise:       mortiseDims,
+    tenon:         tenonDims,
+    legThickness:  legPart?.stock?.actual?.thickness  ?? 3.5,
+    railWidth:     railPart?.stock?.actual?.width     ?? 3.0,
+  }
+}
+
 function downloadGcode(gcode, filename = 'cut-plan.nc') {
   const blob = new Blob([gcode], { type: 'text/plain' })
   const url  = URL.createObjectURL(blob)
@@ -99,6 +134,7 @@ export default function App() {
   const [loading,     setLoading    ] = useState(false)
   const [error,       setError      ] = useState(null)
   const [dragOver,    setDragOver   ] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef()
 
   const loadImage = useCallback((file) => {
@@ -240,6 +276,7 @@ export default function App() {
               <tbody>
                 {result.parts.map((p, i) => {
                   const cd = p.cutDimensions || {}
+                  const viewerProps = viewerPropsFor(p, result.parts)
                   return (
                     <tr key={i} style={i % 2 === 1 ? styles.trEven : {}}>
                       <td style={styles.td}><strong>{p.partName || p.name}</strong></td>
@@ -259,6 +296,7 @@ export default function App() {
                         {p.joints?.length > 0
                           ? p.joints.map((j, ji) => <JointDetail key={ji} joint={j} />)
                           : <span style={{ color: '#999' }}>none</span>}
+                        {viewerProps && <JointViewer3D {...viewerProps} />}
                         {(p.notes || []).map((n, ni) => (
                           <div key={`n${ni}`} style={styles.note}>{n}</div>
                         ))}
@@ -272,6 +310,24 @@ export default function App() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {result?.parts?.length > 0 && (
+        <div style={styles.card}>
+          <button
+            style={styles.toggle}
+            onClick={() => setShowPreview(s => !s)}
+            aria-expanded={showPreview}
+          >
+            <span style={styles.toggleArrow}>{showPreview ? '▾' : '▸'}</span>
+            <span>3D preview</span>
+          </button>
+          {showPreview && (
+            <div style={{ marginTop: 16 }}>
+              <TableViewer3D parts={result.parts} overallDimensions={result.overallDimensions} />
+            </div>
+          )}
         </div>
       )}
     </div>
