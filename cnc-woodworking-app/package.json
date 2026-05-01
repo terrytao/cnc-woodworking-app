@@ -8,5 +8,8 @@
     "dev:backend": "cd backend && node server.js",
     "build:frontend": "cd frontend && npm run build",
     "deploy": "npm run build:frontend && cd infra && npx cdk deploy --require-approval never"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
   }
 }

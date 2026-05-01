@@ -1,3 +1,4 @@
+const cdk = require('aws-cdk-lib')
 const { Stack, CfnOutput, Duration, RemovalPolicy } = require('aws-cdk-lib')
 const s3 = require('aws-cdk-lib/aws-s3')
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment')
@@ -13,7 +14,9 @@ class CncCutListStack extends Stack {
 
     // Lambda function (esbuild bundles backend/handler.js and its deps)
     const fn = new lambda.NodejsFunction(this, 'CutListHandler', {
+      projectRoot: path.join(__dirname, '../..'),
       entry: path.join(__dirname, '../../backend/handler.js'),
+      depsLockFilePath: path.join(__dirname, '../../backend/package-lock.json'),
       handler: 'handler',
       runtime: lambdaCore.Runtime.NODEJS_20_X,
       timeout: Duration.seconds(30),
@@ -68,7 +71,7 @@ function handler(event) {
       },
       additionalBehaviors: {
         '/api/*': {
-          origin: new origins.HttpOrigin(fnUrl.url.replace('https://', '').replace(/\/$/, '')),
+          origin: new origins.HttpOrigin(cdk.Fn.select(2, cdk.Fn.split('/', fnUrl.url))),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,

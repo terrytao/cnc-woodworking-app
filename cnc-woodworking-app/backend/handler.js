@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const { processPartsArray, buildFullGcode } = require('./joineryEngine')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -36,7 +37,18 @@ Rules:
 - Use the units specified by the caller (inches or millimeters).
 - Include all major structural parts. Omit hardware (screws, hinges).
 - If a dimension is truly unknown, use null.
-- Do not include any text outside the JSON object.`
+- Do not include any text outside the JSON object.
+
+Stock selection rules based on table size:
+- Side tables and nightstands (under 24" wide): legs 1.5"×1.5", rails 0.75"×2.5"
+- Coffee tables (24-36" wide): legs 1.75"×1.75", rails 0.75"×3.5"
+- Dining tables 4 person (36-48" long): legs 2.5"×2.5", rails 0.75"×3.5"
+- Dining tables 6 person (60-72" long): legs 3.0"×3.0", rails 1.0"×4.0"
+- Dining tables 8+ person (84"+ long): legs 3.5"×3.5", rails 1.5"×4.5"
+- Farm/conference tables: legs 3.5"×3.5", rails 1.5"×4.5"
+
+Always return leg width and thickness equal to each other (square legs).
+Always return dimensions in decimal inches.`
 
 exports.handler = async (event) => {
   if (event.requestContext?.http?.method === 'OPTIONS' || event.httpMethod === 'OPTIONS') {
@@ -85,7 +97,11 @@ exports.handler = async (event) => {
       return { statusCode: 502, headers: CORS_HEADERS, body: JSON.stringify({ error: 'Model returned non-JSON response', raw: text.slice(0, 200) }) }
     }
 
-    return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify(parsed) }
+    const enrichedParts = processPartsArray(parsed.parts || [])
+    const fullGcode     = buildFullGcode(enrichedParts)
+    const responseBody  = { ...parsed, parts: enrichedParts, gcode: fullGcode }
+
+    return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify(responseBody) }
   } catch (err) {
     console.error('Anthropic error:', err)
     return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: err.message || 'Internal server error' }) }

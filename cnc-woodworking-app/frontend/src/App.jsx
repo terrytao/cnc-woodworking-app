@@ -3,56 +3,102 @@ import { useState, useRef, useCallback } from 'react'
 const API_URL = import.meta.env.VITE_API_URL || '/api/generate'
 const UNITS_OPTIONS = ['inches', 'millimeters']
 
+const GREEN  = '#2d4a22'
+const LGREEN = '#f0f7ec'
+
 const styles = {
-  container: { maxWidth: 860, margin: '0 auto', padding: '24px 16px', fontFamily: "'Segoe UI', system-ui, sans-serif", color: '#1a1a1a' },
-  header: { textAlign: 'center', marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: 700, margin: '0 0 8px', color: '#2d4a22' },
-  subtitle: { color: '#666', fontSize: 15, margin: 0 },
-  card: { background: '#fff', border: '1px solid #e0e0e0', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' },
-  tabBar: { display: 'flex', gap: 8, marginBottom: 20 },
-  tab: (active) => ({
-    flex: 1, padding: '10px 16px', border: `2px solid ${active ? '#2d4a22' : '#d0d0d0'}`,
-    borderRadius: 8, background: active ? '#2d4a22' : '#fff', color: active ? '#fff' : '#555',
-    cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'all 0.15s'
-  }),
-  textarea: { width: '100%', minHeight: 120, padding: 12, border: '1px solid #d0d0d0', borderRadius: 8, fontSize: 14, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' },
-  dropzone: (over) => ({
-    border: `2px dashed ${over ? '#2d4a22' : '#b0b0b0'}`, borderRadius: 10, padding: 40,
-    textAlign: 'center', cursor: 'pointer', background: over ? '#f0f7ec' : '#fafafa',
-    transition: 'all 0.15s', color: '#666'
-  }),
-  preview: { maxWidth: '100%', maxHeight: 240, borderRadius: 8, margin: '12px auto 0', display: 'block' },
-  row: { display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' },
-  field: { flex: 1, minWidth: 140 },
-  label: { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 4, color: '#444' },
-  select: { width: '100%', padding: '8px 10px', border: '1px solid #d0d0d0', borderRadius: 6, fontSize: 14, background: '#fff', outline: 'none' },
-  button: { display: 'block', width: '100%', padding: '13px', background: '#2d4a22', color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.3 },
+  container:   { maxWidth: 920, margin: '0 auto', padding: '24px 16px', fontFamily: "'Segoe UI', system-ui, sans-serif", color: '#1a1a1a' },
+  header:      { textAlign: 'center', marginBottom: 32 },
+  title:       { fontSize: 28, fontWeight: 700, margin: '0 0 8px', color: GREEN },
+  subtitle:    { color: '#666', fontSize: 15, margin: 0 },
+  card:        { background: '#fff', border: '1px solid #e0e0e0', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' },
+  tabBar:      { display: 'flex', gap: 8, marginBottom: 20 },
+  tab: (a)  => ({ flex: 1, padding: '10px 16px', border: `2px solid ${a ? GREEN : '#d0d0d0'}`, borderRadius: 8, background: a ? GREEN : '#fff', color: a ? '#fff' : '#555', cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'all 0.15s' }),
+  textarea:    { width: '100%', minHeight: 120, padding: 12, border: '1px solid #d0d0d0', borderRadius: 8, fontSize: 14, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' },
+  dropzone: (o)=>({ border: `2px dashed ${o ? GREEN : '#b0b0b0'}`, borderRadius: 10, padding: 40, textAlign: 'center', cursor: 'pointer', background: o ? LGREEN : '#fafafa', transition: 'all 0.15s', color: '#666' }),
+  preview:     { maxWidth: '100%', maxHeight: 240, borderRadius: 8, margin: '12px auto 0', display: 'block' },
+  row:         { display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' },
+  field:       { flex: 1, minWidth: 140 },
+  label:       { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 4, color: '#444' },
+  select:      { width: '100%', padding: '8px 10px', border: '1px solid #d0d0d0', borderRadius: 6, fontSize: 14, background: '#fff', outline: 'none' },
+  button:      { display: 'block', width: '100%', padding: '13px', background: GREEN, color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.3 },
+  buttonSm:    { padding: '8px 18px', background: GREEN, color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   buttonDisabled: { background: '#8aab7a', cursor: 'not-allowed' },
-  error: { background: '#fff3f3', border: '1px solid #f5c0c0', borderRadius: 8, padding: '12px 16px', color: '#c00', fontSize: 14, marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: '#2d4a22' },
-  meta: { color: '#666', fontSize: 14, marginBottom: 16 },
-  dimBox: { background: '#f4f9f1', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 14 },
-  dimLabel: { fontWeight: 600, color: '#2d4a22', marginRight: 8 },
-  tableWrap: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: 14 },
-  th: { background: '#2d4a22', color: '#fff', padding: '10px 12px', textAlign: 'left', fontWeight: 600 },
-  td: { padding: '9px 12px', borderBottom: '1px solid #eee' },
-  trEven: { background: '#f9fdf7' },
-  badge: { display: 'inline-block', background: '#e8f3e3', color: '#2d4a22', borderRadius: 20, padding: '2px 10px', fontSize: 13, fontWeight: 600 },
+  error:       { background: '#fff3f3', border: '1px solid #f5c0c0', borderRadius: 8, padding: '12px 16px', color: '#c00', fontSize: 14, marginBottom: 16 },
+  warn:        { background: '#fffbe6', border: '1px solid #ffe082', borderRadius: 6, padding: '6px 12px', color: '#7a5c00', fontSize: 13, marginTop: 4 },
+  note:        { background: '#eef5ff', border: '1px solid #c8dafc', borderRadius: 6, padding: '6px 12px', color: '#274d8a', fontSize: 13, marginTop: 4 },
+  sectionTitle:{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: GREEN },
+  meta:        { color: '#666', fontSize: 14, marginBottom: 16 },
+  dimBox:      { background: LGREEN, borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 14 },
+  dimLabel:    { fontWeight: 600, color: GREEN, marginRight: 8 },
+  tableWrap:   { overflowX: 'auto' },
+  table:       { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
+  th:          { background: GREEN, color: '#fff', padding: '9px 10px', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap' },
+  td:          { padding: '8px 10px', borderBottom: '1px solid #eee', verticalAlign: 'top' },
+  trEven:      { background: '#f9fdf7' },
+  badge:       { display: 'inline-block', background: '#e8f3e3', color: GREEN, borderRadius: 20, padding: '2px 10px', fontSize: 13, fontWeight: 600 },
+  jointBox:    { background: '#f5f5f5', borderRadius: 6, padding: '8px 12px', fontSize: 12, marginTop: 4 },
+  jointTitle:  { fontWeight: 700, color: GREEN, textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.5, marginBottom: 4 },
+  dimRow:      { display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 2 },
+  dimVal:      { color: '#333' },
+  dimKey:      { color: '#888', marginRight: 2 },
+  gcodeBar:    { display: 'flex', justifyContent: 'flex-end', marginBottom: 12 },
+}
+
+function JointDetail({ joint }) {
+  const d = joint.dimensions
+  const isMortise = joint.type === 'mortise'
+
+  return (
+    <div style={styles.jointBox}>
+      <div style={styles.jointTitle}>{joint.type} — {joint.position?.face}</div>
+      <div style={styles.dimRow}>
+        {isMortise ? (
+          <>
+            <span style={styles.dimVal}><span style={styles.dimKey}>W</span>{d.width?.toFixed(4)}"</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>L</span>{d.length?.toFixed(4)}"</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>D</span>{d.depth?.toFixed(4)}"</span>
+          </>
+        ) : (
+          <>
+            <span style={styles.dimVal}><span style={styles.dimKey}>T</span>{d.thickness?.toFixed(4)}"</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>L</span>{d.length?.toFixed(4)}"</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>W</span>{d.width?.toFixed(4)}"</span>
+          </>
+        )}
+        {joint.fitClearance != null && (
+          <span style={styles.dimVal}><span style={styles.dimKey}>clearance</span>{joint.fitClearance?.toFixed(4)}"</span>
+        )}
+        {isMortise && joint.dogBones?.length > 0 && (
+          <span style={styles.dimVal}><span style={styles.dimKey}>dog bones</span>{joint.dogBones.length}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function downloadGcode(gcode, filename = 'cut-plan.nc') {
+  const blob = new Blob([gcode], { type: 'text/plain' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export default function App() {
-  const [mode, setMode] = useState('text')
-  const [prompt, setPrompt] = useState('')
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [mode,        setMode       ] = useState('text')
+  const [prompt,      setPrompt     ] = useState('')
+  const [imageFile,   setImageFile  ] = useState(null)
+  const [imagePreview,setImagePreview] = useState(null)
   const [imageBase64, setImageBase64] = useState(null)
-  const [imageMime, setImageMime] = useState(null)
-  const [units, setUnits] = useState('inches')
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [dragOver, setDragOver] = useState(false)
+  const [imageMime,   setImageMime  ] = useState(null)
+  const [units,       setUnits      ] = useState('inches')
+  const [result,      setResult     ] = useState(null)
+  const [loading,     setLoading    ] = useState(false)
+  const [error,       setError      ] = useState(null)
+  const [dragOver,    setDragOver   ] = useState(false)
   const fileInputRef = useRef()
 
   const loadImage = useCallback((file) => {
@@ -75,20 +121,16 @@ export default function App() {
 
   const handleSubmit = async () => {
     if (mode === 'text' && !prompt.trim()) { setError('Please enter a project description.'); return }
-    if (mode === 'image' && !imageBase64) { setError('Please upload an image.'); return }
-    setLoading(true)
-    setError(null)
-    setResult(null)
+    if (mode === 'image' && !imageBase64)  { setError('Please upload an image.'); return }
+    setLoading(true); setError(null); setResult(null)
     try {
       const body = {
         units,
-        ...(mode === 'text' ? { prompt: prompt.trim() } : { image: { data: imageBase64, mediaType: imageMime } })
+        ...(mode === 'text'
+          ? { prompt: prompt.trim() }
+          : { image: { data: imageBase64, mediaType: imageMime } })
       }
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
+      const res  = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
       if (!data.furnitureType || !Array.isArray(data.parts)) throw new Error('Invalid response from server')
@@ -111,7 +153,7 @@ export default function App() {
 
       <div style={styles.card}>
         <div style={styles.tabBar}>
-          <button style={styles.tab(mode === 'text')} onClick={() => setMode('text')}>Text Description</button>
+          <button style={styles.tab(mode === 'text')}  onClick={() => setMode('text')}>Text Description</button>
           <button style={styles.tab(mode === 'image')} onClick={() => setMode('image')}>Image Upload</button>
         </div>
 
@@ -171,10 +213,18 @@ export default function App() {
           {dim && (
             <div style={styles.dimBox}>
               <span style={styles.dimLabel}>Overall dimensions:</span>
-              {dim.width && <span>{dim.width} W </span>}
+              {dim.width  && <span>{dim.width} W </span>}
               {dim.height && <span>× {dim.height} H </span>}
-              {dim.depth && <span>× {dim.depth} D </span>}
+              {dim.depth  && <span>× {dim.depth} D </span>}
               <span style={{ color: '#666' }}>{dim.unit || units}</span>
+            </div>
+          )}
+
+          {result.gcode && (
+            <div style={styles.gcodeBar}>
+              <button style={styles.buttonSm} onClick={() => downloadGcode(result.gcode, `${result.furnitureType || 'cutplan'}.nc`)}>
+                Download G-code (.nc)
+              </button>
             </div>
           )}
 
@@ -182,21 +232,43 @@ export default function App() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {['Part Name', `Length (${units})`, `Width (${units})`, `Thickness (${units})`, 'Notes'].map(h => (
+                  {['Part Name', 'Qty', 'Stock', `Cut L (${units})`, `Cut W (${units})`, `Cut T (${units})`, 'Joinery'].map(h => (
                     <th key={h} style={styles.th}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {result.parts.map((p, i) => (
-                  <tr key={i} style={i % 2 === 1 ? styles.trEven : {}}>
-                    <td style={styles.td}><strong>{p.name}</strong></td>
-                    <td style={styles.td}>{p.length ?? '—'}</td>
-                    <td style={styles.td}>{p.width ?? '—'}</td>
-                    <td style={styles.td}>{p.thickness ?? '—'}</td>
-                    <td style={styles.td}>{p.notes || '—'}</td>
-                  </tr>
-                ))}
+                {result.parts.map((p, i) => {
+                  const cd = p.cutDimensions || {}
+                  return (
+                    <tr key={i} style={i % 2 === 1 ? styles.trEven : {}}>
+                      <td style={styles.td}><strong>{p.partName || p.name}</strong></td>
+                      <td style={styles.td}>{p.qty ?? '—'}</td>
+                      <td style={styles.td}>
+                        {p.stock ? (
+                          <>
+                            <div style={{ fontWeight: 600 }}>{p.stock.nominal}</div>
+                            <div style={{ color: '#666', fontSize: 12 }}>{p.stock.actual?.thickness}" × {p.stock.actual?.width}"</div>
+                          </>
+                        ) : '—'}
+                      </td>
+                      <td style={styles.td}>{cd.length?.toFixed(4) ?? (p.length ?? '—')}</td>
+                      <td style={styles.td}>{cd.width?.toFixed(4) ?? (p.width ?? '—')}</td>
+                      <td style={styles.td}>{cd.thickness?.toFixed(4) ?? (p.thickness ?? '—')}</td>
+                      <td style={styles.td}>
+                        {p.joints?.length > 0
+                          ? p.joints.map((j, ji) => <JointDetail key={ji} joint={j} />)
+                          : <span style={{ color: '#999' }}>none</span>}
+                        {(p.notes || []).map((n, ni) => (
+                          <div key={`n${ni}`} style={styles.note}>{n}</div>
+                        ))}
+                        {(p.warnings || []).map((w, wi) => (
+                          <div key={`w${wi}`} style={styles.warn}>{w}</div>
+                        ))}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
