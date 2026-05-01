@@ -61,7 +61,7 @@ function fmt(value) {
 // Flat parts get no mortise/tenon joinery — they're tabletops, panels, shelves,
 // breadboards, cleats. Checked AFTER rail/leg so "Top Rail" still classifies as
 // a rail (rail keyword wins).
-const FLAT_REGEX = /\b(top|tabletop|breadboard|cleat|shelf|panel)\b/
+const FLAT_REGEX = /\b(top|tabletop|breadboard|cleat|shelf|panel|fastener|figure-8|figure8|hardware|bracket|block|button|clip|dowel pin|pocket)\b/
 
 function classifyPart(part) {
   // Accept both 'name' (Claude output) and 'partName' (engine output) so
