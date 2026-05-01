@@ -1,0 +1,17 @@
+{
+  "name": "cnc-woodworking-infra",
+  "version": "1.0.0",
+  "description": "CDK infrastructure for CNC cut list generator",
+  "main": "bin/app.js",
+  "scripts": {
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.100.0",
+    "esbuild": "^0.20.0"
+  }
+}

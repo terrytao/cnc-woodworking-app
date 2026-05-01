@@ -1,0 +1,12 @@
+{
+  "name": "cnc-woodworking-backend",
+  "version": "1.0.0",
+  "description": "Lambda handler for CNC cut list generator",
+  "main": "handler.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0"
+  }
+}

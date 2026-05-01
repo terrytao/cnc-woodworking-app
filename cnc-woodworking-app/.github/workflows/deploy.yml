@@ -1,0 +1,47 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            infra/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          VITE_API_URL=/api/generate npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install infra dependencies
+        working-directory: infra
+        run: npm ci
+
+      - name: CDK deploy
+        working-directory: infra
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npx cdk deploy --require-approval never --outputs-file cdk-outputs.json
+
+      - name: Print site URL
+        working-directory: infra
+        run: |
+          cat cdk-outputs.json | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); const o=JSON.parse(d); const stack=Object.values(o)[0]; console.log('Site URL:', stack.SiteUrl || stack[Object.keys(stack).find(k=>k.includes('SiteUrl'))]);"

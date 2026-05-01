@@ -1,0 +1,12 @@
+{
+  "name": "cnc-woodworking-app",
+  "version": "1.0.0",
+  "description": "CNC woodworking cut list generator",
+  "scripts": {
+    "install:all": "cd frontend && npm install && cd ../backend && npm install && cd ../infra && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && node server.js",
+    "build:frontend": "cd frontend && npm run build",
+    "deploy": "npm run build:frontend && cd infra && npx cdk deploy --require-approval never"
+  }
+}
