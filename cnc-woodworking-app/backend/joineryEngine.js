@@ -17,7 +17,10 @@ const LUMBER_TABLE = [
   { nominal: '1x6',  t: 0.75, w: 5.5   },
   { nominal: '1x8',  t: 0.75, w: 7.25  },
   { nominal: '2x2',  t: 1.5,  w: 1.5   },
+  { nominal: '2x2 (ripped)', t: 1.75, w: 1.75 },
   { nominal: '2x4',  t: 1.5,  w: 3.5   },
+  { nominal: '3x3',  t: 2.5,  w: 2.5   },
+  { nominal: '4x4 (planed)', t: 3.0, w: 3.0 },
   { nominal: '2x6',  t: 1.5,  w: 5.5   },
   { nominal: '2x8',  t: 1.5,  w: 7.25  },
   { nominal: '2x10', t: 1.5,  w: 9.25  },
@@ -201,6 +204,7 @@ function generateGcode(partName, mortise, stockThickness) {
 // ─── Core joint calculator ────────────────────────────────────────────────────
 function calculateJoints(legPart, railPart, legStock, railStock) {
   const legThickness  = legStock.actual.thickness
+  const legWidth      = legStock.actual.width
   const railThickness = railStock.actual.thickness
   const railWidth     = railStock.actual.width
   const mortiseDepth  = MORTISE_DEPTH
@@ -221,9 +225,25 @@ function calculateJoints(legPart, railPart, legStock, railStock) {
   }
   const rawMortiseWidth = rawTenonThickness + GLUE_CLEARANCE
 
-  const rawMortiseLength = railWidth - SHOULDER_SIZE * 2
+  // Mortise length is bounded by the leg cross-section. The wall thickness
+  // proportional rule (legThickness/4) is too conservative for thick legs —
+  // a 3.5" leg only needs ~0.75" walls, not 0.875". Scale by leg size.
+  let MIN_WALL
+  if (legThickness < 2)      MIN_WALL = legThickness / 4
+  else if (legThickness <= 3) MIN_WALL = 0.5
+  else                        MIN_WALL = 0.75
+  const maxMortiseLength      = legWidth - 2 * MIN_WALL
+  const idealMortiseLength    = railWidth - SHOULDER_SIZE * 2
+  let   rawMortiseLength      = idealMortiseLength
+  const clampFired            = rawMortiseLength > maxMortiseLength
+  console.log(`[clamp] leg ${legThickness}x${legWidth}, rail W=${railWidth} | MIN_WALL=${MIN_WALL.toFixed(4)} maxMortL=${maxMortiseLength.toFixed(4)} idealMortL=${idealMortiseLength.toFixed(4)} → ${clampFired ? 'CLAMP' : 'pass'} → rawMortL=${(clampFired ? maxMortiseLength : idealMortiseLength).toFixed(4)}`)
+  if (clampFired) {
+    rawMortiseLength = maxMortiseLength
+    notes.push(`Note: mortise length clamped to ${maxMortiseLength.toFixed(4)}" by leg wall thickness`)
+  }
   const rawTenonLength   = mortiseDepth
-  // Clamp tenon width to rail stock width less a 0.5" total shoulder allowance.
+  // Tenon width tracks the clamped mortise length, with rail stock as a
+  // secondary cap (a 0.5" total shoulder allowance).
   const rawTenonWidth    = Math.min(rawMortiseLength, railWidth - 0.5)
   const clearance        = rawMortiseWidth - rawTenonThickness  // = GLUE_CLEARANCE
 

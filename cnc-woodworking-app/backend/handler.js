@@ -41,11 +41,16 @@ Rules:
 
 Stock selection rules based on table size:
 - Side tables and nightstands (under 24" wide): legs 1.5"×1.5", rails 0.75"×2.5"
-- Coffee tables (24-36" wide): legs 1.75"×1.75", rails 0.75"×3.5"
+- Coffee tables (24-42" wide): legs 1.75"×1.75", rails 0.75"×3.5"
 - Dining tables 4 person (36-48" long): legs 2.5"×2.5", rails 0.75"×3.5"
 - Dining tables 6 person (60-72" long): legs 3.0"×3.0", rails 1.0"×4.0"
 - Dining tables 8+ person (84"+ long): legs 3.5"×3.5", rails 1.5"×4.5"
 - Farm/conference tables: legs 3.5"×3.5", rails 1.5"×4.5"
+
+Stretcher rules:
+- Under 48 inches long: never add stretchers
+- 48 to 72 inches long: only add stretchers if legs are 2x2 (1.5" or 1.75") — skip stretchers if legs are 2.5" square or larger
+- Over 72 inches long: add stretchers only if legs are smaller than 3.5" square — skip if legs are 4x4 (3.5") or larger
 
 Always return leg width and thickness equal to each other (square legs).
 Always return dimensions in decimal inches.`
