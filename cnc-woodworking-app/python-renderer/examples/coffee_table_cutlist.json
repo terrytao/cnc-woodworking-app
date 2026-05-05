@@ -1,0 +1,203 @@
+[
+  {
+    "partName": "Leg",
+    "qty": 4,
+    "stock": {
+      "nominal": "2x2 (ripped)",
+      "actual": {
+        "thickness": 1.75,
+        "width": 1.75
+      }
+    },
+    "cutDimensions": {
+      "length": 22.5625,
+      "width": 1.8125,
+      "thickness": 1.75
+    },
+    "joints": [
+      {
+        "type": "mortise",
+        "label": "Long Apron",
+        "position": {
+          "x": 0.59375,
+          "y": 0.25,
+          "face": "front"
+        },
+        "dimensions": {
+          "width": 0.515625,
+          "length": 0.8125,
+          "depth": 1
+        },
+        "dogBones": [
+          {
+            "x": 0.59375,
+            "y": 0.25,
+            "radius": 0.0625
+          },
+          {
+            "x": 1.109375,
+            "y": 0.25,
+            "radius": 0.0625
+          },
+          {
+            "x": 0.59375,
+            "y": 1.0625,
+            "radius": 0.0625
+          },
+          {
+            "x": 1.109375,
+            "y": 1.0625,
+            "radius": 0.0625
+          }
+        ],
+        "grainDirection": "parallel",
+        "fitClearance": 0.0030000000000000027,
+        "warnings": []
+      },
+      {
+        "type": "mortise",
+        "label": "Short Apron",
+        "position": {
+          "x": 0.59375,
+          "y": 0.25,
+          "face": "front"
+        },
+        "dimensions": {
+          "width": 0.515625,
+          "length": 0.8125,
+          "depth": 1
+        },
+        "dogBones": [
+          {
+            "x": 0.59375,
+            "y": 0.25,
+            "radius": 0.0625
+          },
+          {
+            "x": 1.109375,
+            "y": 0.25,
+            "radius": 0.0625
+          },
+          {
+            "x": 0.59375,
+            "y": 1.0625,
+            "radius": 0.0625
+          },
+          {
+            "x": 1.109375,
+            "y": 1.0625,
+            "radius": 0.0625
+          }
+        ],
+        "grainDirection": "parallel",
+        "fitClearance": 0.0030000000000000027,
+        "warnings": []
+      }
+    ],
+    "warnings": [
+      "Mortise long axis should run with grain — verify orientation"
+    ],
+    "notes": [
+      "Note: mortise length clamped to 0.8750\" by leg wall thickness"
+    ],
+    "gcode": "; =========================================\n; Mortise: Leg\n; Width=0.5156\" Length=0.8125\" Depth=1.0000\"\n; =========================================\nG20 G17 G90\nS18000 M3\nG0 Z0.1000\n; --- Pass 1 ---\nG0 X0.5938 Y0.2500\nG1 Z-0.2500 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Pass 2 ---\nG0 X0.5938 Y0.2500\nG1 Z-0.5000 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Pass 3 ---\nG0 X0.5938 Y0.2500\nG1 Z-0.7500 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Pass 4 ---\nG0 X0.5938 Y0.2500\nG1 Z-1.0000 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Dog bone corners ---\nG0 X0.5938 Y0.2500\nG1 Z-1.0000 F50\nG2 X0.5938 Y0.2500 I0.0625 J0 F100\nG0 Z0.1000\nG0 X1.1094 Y0.2500\nG1 Z-1.0000 F50\nG2 X1.1094 Y0.2500 I0.0625 J0 F100\nG0 Z0.1000\nG0 X0.5938 Y1.0625\nG1 Z-1.0000 F50\nG2 X0.5938 Y1.0625 I0.0625 J0 F100\nG0 Z0.1000\nG0 X1.1094 Y1.0625\nG1 Z-1.0000 F50\nG2 X1.1094 Y1.0625 I0.0625 J0 F100\nG0 Z0.1000\nM5\nG0 Z1.0\n; End Leg\n\n; =========================================\n; Mortise: Leg\n; Width=0.5156\" Length=0.8125\" Depth=1.0000\"\n; =========================================\nG20 G17 G90\nS18000 M3\nG0 Z0.1000\n; --- Pass 1 ---\nG0 X0.5938 Y0.2500\nG1 Z-0.2500 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Pass 2 ---\nG0 X0.5938 Y0.2500\nG1 Z-0.5000 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Pass 3 ---\nG0 X0.5938 Y0.2500\nG1 Z-0.7500 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Pass 4 ---\nG0 X0.5938 Y0.2500\nG1 Z-1.0000 F50\nG1 X0.5938 Y0.2500 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.3438 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.4375 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.5313 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.6250 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.7188 F100\nG1 X0.5938 F100\nG1 X0.5938 Y0.8125 F100\nG1 X1.1094 F100\nG1 X1.1094 Y0.9063 F100\nG1 X0.5938 F100\nG1 X0.5938 Y1.0000 F100\nG1 X1.1094 F100\nG0 Z0.1000\n; --- Dog bone corners ---\nG0 X0.5938 Y0.2500\nG1 Z-1.0000 F50\nG2 X0.5938 Y0.2500 I0.0625 J0 F100\nG0 Z0.1000\nG0 X1.1094 Y0.2500\nG1 Z-1.0000 F50\nG2 X1.1094 Y0.2500 I0.0625 J0 F100\nG0 Z0.1000\nG0 X0.5938 Y1.0625\nG1 Z-1.0000 F50\nG2 X0.5938 Y1.0625 I0.0625 J0 F100\nG0 Z0.1000\nG0 X1.1094 Y1.0625\nG1 Z-1.0000 F50\nG2 X1.1094 Y1.0625 I0.0625 J0 F100\nG0 Z0.1000\nM5\nG0 Z1.0\n; End Leg\n"
+  },
+  {
+    "partName": "Long Apron",
+    "qty": 2,
+    "stock": {
+      "nominal": "1x4",
+      "actual": {
+        "thickness": 0.75,
+        "width": 3.5
+      }
+    },
+    "cutDimensions": {
+      "length": 70.5625,
+      "width": 3.5625,
+      "thickness": 0.75
+    },
+    "joints": [
+      {
+        "type": "tenon",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "face": "end"
+        },
+        "dimensions": {
+          "thickness": 0.578125,
+          "length": 1,
+          "width": 0.9375
+        },
+        "grainDirection": "parallel",
+        "fitClearance": 0.0030000000000000027,
+        "warnings": []
+      }
+    ],
+    "warnings": [],
+    "notes": [
+      "Note: mortise length clamped to 0.8750\" by leg wall thickness"
+    ],
+    "gcode": "; =========================================\n; Tenon: Long Apron\n; Thickness=0.5781\" Width=0.9375\" Length=1.0000\"\n; Stock: 0.7500\" × 3.5000\"\n; =========================================\nG20 G17 G90\nS18000 M3\nG0 Z0.1000\n; --- Top shoulder cut ---\n; Pass 1 of 1\nG0 X0.0000 Y3.5000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; --- Bottom shoulder cut ---\n; Pass 1 of 1\nG0 X0.0000 Y0.0000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; --- Front cheek cut ---\n; Pass 1 of 6\nG0 X0.0000 Y0.0000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 2 of 6\nG0 X0.0000 Y0.0000\nG1 Z-0.5000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 3 of 6\nG0 X0.0000 Y0.0000\nG1 Z-0.7500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 4 of 6\nG0 X0.0000 Y0.0000\nG1 Z-1.0000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 5 of 6\nG0 X0.0000 Y0.0000\nG1 Z-1.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 6 of 6\nG0 X0.0000 Y0.0000\nG1 Z-1.2813 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; --- Back cheek cut ---\n; Pass 1 of 6\nG0 X0.0000 Y3.5000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 2 of 6\nG0 X0.0000 Y3.5000\nG1 Z-0.5000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 3 of 6\nG0 X0.0000 Y3.5000\nG1 Z-0.7500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 4 of 6\nG0 X0.0000 Y3.5000\nG1 Z-1.0000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 5 of 6\nG0 X0.0000 Y3.5000\nG1 Z-1.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 6 of 6\nG0 X0.0000 Y3.5000\nG1 Z-1.2813 F50\nG1 X1.0000 F100\nG0 Z0.1000\nM5\nG0 Z1.0\nM30\n; End Long Apron\n"
+  },
+  {
+    "partName": "Short Apron",
+    "qty": 2,
+    "stock": {
+      "nominal": "1x4",
+      "actual": {
+        "thickness": 0.75,
+        "width": 3.5
+      }
+    },
+    "cutDimensions": {
+      "length": 22.5625,
+      "width": 3.5625,
+      "thickness": 0.75
+    },
+    "joints": [
+      {
+        "type": "tenon",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "face": "end"
+        },
+        "dimensions": {
+          "thickness": 0.578125,
+          "length": 1,
+          "width": 0.9375
+        },
+        "grainDirection": "parallel",
+        "fitClearance": 0.0030000000000000027,
+        "warnings": []
+      }
+    ],
+    "warnings": [],
+    "notes": [
+      "Note: mortise length clamped to 0.8750\" by leg wall thickness"
+    ],
+    "gcode": "; =========================================\n; Tenon: Short Apron\n; Thickness=0.5781\" Width=0.9375\" Length=1.0000\"\n; Stock: 0.7500\" × 3.5000\"\n; =========================================\nG20 G17 G90\nS18000 M3\nG0 Z0.1000\n; --- Top shoulder cut ---\n; Pass 1 of 1\nG0 X0.0000 Y3.5000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; --- Bottom shoulder cut ---\n; Pass 1 of 1\nG0 X0.0000 Y0.0000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; --- Front cheek cut ---\n; Pass 1 of 6\nG0 X0.0000 Y0.0000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 2 of 6\nG0 X0.0000 Y0.0000\nG1 Z-0.5000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 3 of 6\nG0 X0.0000 Y0.0000\nG1 Z-0.7500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 4 of 6\nG0 X0.0000 Y0.0000\nG1 Z-1.0000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 5 of 6\nG0 X0.0000 Y0.0000\nG1 Z-1.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 6 of 6\nG0 X0.0000 Y0.0000\nG1 Z-1.2813 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; --- Back cheek cut ---\n; Pass 1 of 6\nG0 X0.0000 Y3.5000\nG1 Z-0.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 2 of 6\nG0 X0.0000 Y3.5000\nG1 Z-0.5000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 3 of 6\nG0 X0.0000 Y3.5000\nG1 Z-0.7500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 4 of 6\nG0 X0.0000 Y3.5000\nG1 Z-1.0000 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 5 of 6\nG0 X0.0000 Y3.5000\nG1 Z-1.2500 F50\nG1 X1.0000 F100\nG0 Z0.1000\n; Pass 6 of 6\nG0 X0.0000 Y3.5000\nG1 Z-1.2813 F50\nG1 X1.0000 F100\nG0 Z0.1000\nM5\nG0 Z1.0\nM30\n; End Short Apron\n"
+  },
+  {
+    "partName": "Top",
+    "qty": 1,
+    "stock": {
+      "nominal": "2x12",
+      "actual": {
+        "thickness": 1.5,
+        "width": 11.25
+      }
+    },
+    "cutDimensions": {
+      "length": 72.0625,
+      "width": 11.3125,
+      "thickness": 1.5
+    },
+    "joints": [],
+    "warnings": [],
+    "notes": [],
+    "gcode": ""
+  }
+]

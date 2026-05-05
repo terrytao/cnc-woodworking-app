@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ project_title }} — Cut List</title>
+  <style>{{ css_text }}</style>
+</head>
+<body>
+
+<section class="page first">
+  <h1>{{ project_title }}</h1>
+  <p class="subtitle">Hand-tool cut list</p>
+
+  <dl class="meta">
+    <dt>Largest part</dt>
+    <dd><span class="dim">{{ overall_t | frac }} × {{ overall_w | frac }} × {{ overall_l | frac }}"</span> (T × W × L)</dd>
+    <dt>Joinery</dt>
+    <dd>Mortise &amp; tenon</dd>
+    <dt>Generated</dt>
+    <dd>{{ generated_at }}</dd>
+  </dl>
+
+  <p class="note">
+    All measurements are in fractional inches, rounded to <span class="dim">1/64"</span>.
+    A hyphen separates whole inches from the fractional remainder
+    (e.g. <span class="dim">22-9/16"</span>). Verify on scrap before
+    committing to your show stock.
+  </p>
+  {% if legacy_json %}
+  <p class="warning">
+    <strong>Legacy JSON detected.</strong> This cut list was produced
+    from a JSON file written before fix #2 to <code>joineryEngine.js</code>
+    (which adds <code>finishedWidth</code> / <code>finishedThickness</code>
+    fields). Mortise and tenon dimensions below are using the kerf-
+    compensated CNC toolpath values as a fallback — they will look
+    inconsistent and a fit warning will appear in the joinery summary.
+    Re-run the JS engine and regenerate this document to clear the
+    warning.
+  </p>
+  {% endif %}
+</section>
+
+<section class="page stock-list">
+  <h2>Stock List</h2>
+  <p>Total lumber to buy. Lengths are picked from standard board sizes (6, 8, 10, 12, 14, 16 ft) so each board holds the longest single piece in its group.</p>
+
+  <table class="stock-table">
+    <thead>
+      <tr>
+        <th>Stock</th>
+        <th>Actual T × W</th>
+        <th>Buy</th>
+        <th>For</th>
+        <th>Waste</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in stock_list %}
+      <tr>
+        <td><strong>{{ s.nominal }}</strong></td>
+        <td><span class="dim">{{ s.actual.thickness | frac }}" × {{ s.actual.width | frac }}"</span></td>
+        <td>{{ s.count }} × <span class="dim">{{ s.min_length_in | length_str }}</span></td>
+        <td>{{ s.for_parts | join(", ") }}</td>
+        <td><span class="dim">{{ s.actual_waste_in | frac }}"</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="caveat">
+    Waste shown is what's left after rough-cutting all listed pieces from the
+    chosen board(s). Aim for at least 10% buffer; if the listed waste is
+    under that, consider buying the next size up so you can re-cut a
+    botched piece without an emergency lumberyard run.
+  </p>
+</section>
+
+<section class="page cut-list">
+  <h2>Cut List Overview</h2>
+  <p>Final cut dimensions for every part. Cut and dimension all stock to these sizes before laying out joinery.</p>
+  <table class="cut-list-table">
+    <thead>
+      <tr>
+        <th>Part</th>
+        <th>Qty</th>
+        <th>Stock</th>
+        <th>T (final)</th>
+        <th>W (final)</th>
+        <th>L (final)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for part in parts %}
+      <tr>
+        <td><strong>{{ part.partName }}</strong></td>
+        <td>{{ part.qty }}</td>
+        <td>{{ part.stock.nominal }}</td>
+        <td><span class="dim">{{ part.cutDimensions.thickness | frac }}"</span></td>
+        <td><span class="dim">{{ part.cutDimensions.width | frac }}"</span></td>
+        <td><span class="dim">{{ part.cutDimensions.length | frac }}"</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="caveat">
+    Length includes a <span class="dim">1/16"</span> kerf-compensation
+    margin from the engine. Trim to your exact show length once joinery
+    is fitted.
+  </p>
+</section>
+
+{% for part in parts %}
+<section class="page part-detail">
+  <h2>{{ part.partName }} <span class="qty">×{{ part.qty }}</span></h2>
+
+  <div class="part-grid">
+    <div class="block">
+      <h3>Final dimensions</h3>
+      <ul class="kv">
+        <li><span class="key">Thickness</span> <span class="dim">{{ part.cutDimensions.thickness | frac }}"</span></li>
+        <li><span class="key">Width</span> <span class="dim">{{ part.cutDimensions.width | frac }}"</span></li>
+        <li><span class="key">Length</span> <span class="dim">{{ part.cutDimensions.length | frac }}"</span></li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>Stock</h3>
+      <ul class="kv">
+        <li><span class="key">Nominal</span> {{ part.stock.nominal }}</li>
+        <li><span class="key">Actual T × W</span> <span class="dim">{{ part.stock.actual.thickness | frac }}" × {{ part.stock.actual.width | frac }}"</span></li>
+        <li><span class="key">Cut from</span> 1 board, plane to final T × W</li>
+      </ul>
+    </div>
+  </div>
+
+  {% if part.joints %}
+  <h3>Joinery</h3>
+  {% for joint in part.joints %}
+  <div class="joint">
+    <h4>
+      {{ joint.type | capitalize }}
+      {% if joint.label %}<span class="muted">— mating with {{ joint.label }}</span>{% endif %}
+    </h4>
+
+    {% if joint.type == "mortise" %}
+    <ul class="kv">
+      <li><span class="key">Face</span> {{ joint.position.face }}</li>
+      <li><span class="key">From edge</span> <span class="dim">{{ joint.position.x | frac }}"</span></li>
+      <li><span class="key">From end</span> <span class="dim">{{ joint.position.y | frac }}"</span></li>
+      <li><span class="key">Width (across grain)</span> <span class="dim">{{ joint.dimensions.display_width | frac }}"</span></li>
+      <li><span class="key">Length (along grain)</span> <span class="dim">{{ joint.dimensions.display_length | frac }}"</span></li>
+      <li><span class="key">Depth</span> <span class="dim">{{ joint.dimensions.depth | frac }}"</span></li>
+    </ul>
+    {% if joint.dogBones %}
+    <p class="caveat">
+      Dog-bone radius: <span class="dim">{{ joint.dogBones[0].radius | frac }}"</span>.
+      <strong>Hand-tool note:</strong> dog bones are a CNC artifact (so a
+      round bit can fit a square tenon). Chop square corners with a
+      paring chisel — you don't need them.
+    </p>
+    {% endif %}
+    {% else %}
+    <ul class="kv">
+      <li><span class="key">Position</span> end of part</li>
+      <li><span class="key">Thickness</span> <span class="dim">{{ joint.dimensions.display_thickness | frac }}"</span></li>
+      <li><span class="key">Width (across grain)</span> <span class="dim">{{ joint.dimensions.display_width | frac }}"</span></li>
+      <li><span class="key">Length (into mortise)</span> <span class="dim">{{ joint.dimensions.length | frac }}"</span></li>
+      <li><span class="key">Shoulder (per side)</span> <span class="dim">1/4"</span></li>
+    </ul>
+    {% endif %}
+
+    {% if joint.fitClearance is not none %}
+    <p>Target glue clearance: <span class="dim">{{ "%.4f" | format(joint.fitClearance) }}"</span></p>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="muted">No joinery on this part — flat panel.</p>
+  {% endif %}
+
+  {% if part.notes %}
+  <h3>Notes</h3>
+  <ul>{% for n in part.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if part.warnings %}
+  <h3 class="warning">Warnings</h3>
+  <ul class="warning">{% for w in part.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <p class="placeholder">(Per-part diagram coming soon.)</p>
+</section>
+{% endfor %}
+
+{% if joint_pairs %}
+<section class="page joinery-summary">
+  <h2>Joinery Summary</h2>
+  <p class="subtitle">Take this page to the bench.</p>
+
+  <table class="joinery-table">
+    <thead>
+      <tr>
+        <th rowspan="2">Joint pair</th>
+        <th colspan="3">Mortise</th>
+        <th colspan="3">Tenon</th>
+        <th rowspan="2">Engine clearance</th>
+        <th rowspan="2">Apparent</th>
+      </tr>
+      <tr>
+        <th>W</th><th>L</th><th>D</th>
+        <th>T</th><th>W</th><th>L</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pair in joint_pairs %}
+      <tr {% if pair.fit_warning %}class="warn-row"{% endif %}>
+        <td>{{ pair.label }}</td>
+        <td><span class="dim">{{ pair.mortise_w | frac }}"</span></td>
+        <td><span class="dim">{{ pair.mortise_l | frac }}"</span></td>
+        <td><span class="dim">{{ pair.mortise_d | frac }}"</span></td>
+        <td><span class="dim">{{ pair.tenon_t | frac }}"</span></td>
+        <td><span class="dim">{{ pair.tenon_w | frac }}"</span></td>
+        <td><span class="dim">{{ pair.tenon_l | frac }}"</span></td>
+        <td><span class="dim">{{ "%.4f" | format(pair.engine_clearance) }}"</span></td>
+        <td><span class="dim">{{ "%+.4f" | format(pair.apparent_clearance_in) }}"</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if joint_pairs | selectattr("fit_warning") | list %}
+  <p class="warning">
+    <strong>Fit warning:</strong> rows above show tenon thickness exceeding
+    the listed mortise width. The engine reports a positive
+    "engine clearance," meaning the geometry is intended to fit, but the
+    JSON's mortise width has kerf compensation applied while the tenon
+    thickness does not. See <code>JOINERY_BUG_INVESTIGATION.md</code> in
+    this directory for details. Cut <strong>both</strong> the mortise
+    width and the tenon thickness to the larger of the two values
+    (with a 0.003" clearance shaved off the tenon) until this is
+    resolved upstream.
+  </p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="page assembly">
+  <h2>Assembly Order</h2>
+  <ol class="assembly-steps">
+    <li><strong>Dry-fit every joint.</strong> Test each tenon in its mortise without glue. Pare with a chisel until each enters with hand pressure plus a few mallet taps; it should not require force.</li>
+    <li><strong>Glue subassemblies first.</strong> Build the two ends — short rails between leg pairs — and clamp square. Let cure 30+ minutes before moving.</li>
+    <li><strong>Connect with long rails.</strong> Glue and clamp the long rails between the cured ends. Verify the carcase is square by measuring diagonals; adjust clamping pressure to equalise.</li>
+    <li><strong>Allow full cure.</strong> 24 hours minimum before handling stresses the joints (planing, sanding, fitting the top).</li>
+    <li><strong>Attach the top last, with movement allowance.</strong> Use figure-8 fasteners, button hardware, or slotted screw holes — never glue the top to the apron. Solid wood will move <span class="dim">±1/8"</span> across its width seasonally.</li>
+  </ol>
+</section>
+
+<section class="page notes">
+  <h2>Notes &amp; Caveats</h2>
+  <ul>
+    <li><strong>Wood movement.</strong> Tabletop expands and contracts across its width with humidity changes. Plan attachment hardware accordingly; never lock the top to the apron with a rigid joint.</li>
+    <li><strong>Grain orientation.</strong> Legs: grain runs vertically (along the long axis). Rails: grain runs along the rail's length. Mortise long axis must run with the leg's grain or the leg will split. Tenon shoulders are cut across the grain on the rail face.</li>
+    <li><strong>Finish all sides equally.</strong> Apply finish to the underside of the top as well as the show face. Asymmetrical moisture exchange causes cupping.</li>
+    <li><strong>Test on scrap.</strong> Cut a representative joint in offcut stock first. Verify mortise/tenon fit and clearance before committing to the show pieces.</li>
+    <li><strong>Order of operations within a part.</strong> Dimension stock first (thickness, width, length to final), then mark all joinery from a single reference face and edge. Joinery cuts come last — you can't true a face after a mortise is chopped.</li>
+  </ul>
+</section>
+
+</body>
+</html>

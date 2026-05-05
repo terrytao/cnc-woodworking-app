@@ -1,0 +1,46 @@
+{
+  "name": "Simple Plywood Stool",
+  "piece_type": "stool",
+  "overall_dimensions": { "length": 350, "width": 350, "thickness": 450 },
+  "stock": {
+    "sheet_length": 2440,
+    "sheet_width": 1220,
+    "thickness": 18,
+    "material": "baltic_birch"
+  },
+  "parts": [
+    {
+      "id": "seat",
+      "name": "Seat",
+      "dimensions": { "length": 350, "width": 350, "thickness": 18 },
+      "quantity": 1
+    },
+    {
+      "id": "leg_left",
+      "name": "Left Side Panel",
+      "dimensions": { "length": 350, "width": 432, "thickness": 18 },
+      "quantity": 1,
+      "notes": "vertical slab leg, runs full depth of stool"
+    },
+    {
+      "id": "leg_right",
+      "name": "Right Side Panel",
+      "dimensions": { "length": 350, "width": 432, "thickness": 18 },
+      "quantity": 1,
+      "notes": "vertical slab leg, runs full depth of stool"
+    },
+    {
+      "id": "stretcher",
+      "name": "Stretcher",
+      "dimensions": { "length": 350, "width": 80, "thickness": 18 },
+      "quantity": 1,
+      "notes": "horizontal cross brace tying the two side panels"
+    }
+  ],
+  "joints": [
+    { "id": "seat_to_left",      "type": "tab_and_slot", "parts": ["seat", "leg_left"] },
+    { "id": "seat_to_right",     "type": "tab_and_slot", "parts": ["seat", "leg_right"] },
+    { "id": "stretcher_to_left", "type": "tab_and_slot", "parts": ["stretcher", "leg_left"] },
+    { "id": "stretcher_to_right","type": "tab_and_slot", "parts": ["stretcher", "leg_right"] }
+  ]
+}

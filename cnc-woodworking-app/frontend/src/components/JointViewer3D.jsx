@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { toFraction } from '../utils/fractions'
 
 const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 
@@ -37,7 +38,7 @@ function loadThree() {
   return threePromise
 }
 
-const fmt = (n) => (n != null && Number.isFinite(n) ? `${n.toFixed(2)}"` : '')
+const fmt = (n) => toFraction(n)
 
 export default function JointViewer3D({ mortise, tenon, legThickness, railWidth }) {
   const canvasRef = useRef(null)

@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, Fragment } from 'react'
 import JointViewer3D from './components/JointViewer3D'
 import TableViewer3D from './components/TableViewer3D'
+import ToolpathSimulator from './components/ToolpathSimulator'
+import { toFraction } from './utils/fractions'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/generate'
 const UNITS_OPTIONS = ['inches', 'millimeters']
@@ -45,6 +47,9 @@ const styles = {
   dimVal:      { color: '#333' },
   dimKey:      { color: '#888', marginRight: 2 },
   gcodeBar:    { display: 'flex', justifyContent: 'flex-end', marginBottom: 12 },
+  simBtn: (a) => ({ marginTop: 8, padding: '6px 14px', fontSize: 12, fontWeight: 600, border: `1px solid ${a ? '#cc6633' : '#2d4a22'}`, background: a ? '#cc6633' : '#fff', color: a ? '#fff' : '#2d4a22', borderRadius: 4, cursor: 'pointer' }),
+  simRow:      { background: '#fafafa' },
+  simCell:     { padding: '4px 10px 14px' },
   toggle:      { background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: GREEN, fontFamily: 'inherit' },
   toggleArrow: { display: 'inline-block', width: 14, textAlign: 'center', fontSize: 14, color: GREEN },
 }
@@ -59,15 +64,15 @@ function JointDetail({ joint }) {
       <div style={styles.dimRow}>
         {isMortise ? (
           <>
-            <span style={styles.dimVal}><span style={styles.dimKey}>W</span>{d.width?.toFixed(4)}"</span>
-            <span style={styles.dimVal}><span style={styles.dimKey}>L</span>{d.length?.toFixed(4)}"</span>
-            <span style={styles.dimVal}><span style={styles.dimKey}>D</span>{d.depth?.toFixed(4)}"</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>W</span>{toFraction(d.width)}</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>L</span>{toFraction(d.length)}</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>D</span>{toFraction(d.depth)}</span>
           </>
         ) : (
           <>
-            <span style={styles.dimVal}><span style={styles.dimKey}>T</span>{d.thickness?.toFixed(4)}"</span>
-            <span style={styles.dimVal}><span style={styles.dimKey}>L</span>{d.length?.toFixed(4)}"</span>
-            <span style={styles.dimVal}><span style={styles.dimKey}>W</span>{d.width?.toFixed(4)}"</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>T</span>{toFraction(d.thickness)}</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>L</span>{toFraction(d.length)}</span>
+            <span style={styles.dimVal}><span style={styles.dimKey}>W</span>{toFraction(d.width)}</span>
           </>
         )}
         {joint.fitClearance != null && (
@@ -81,35 +86,27 @@ function JointDetail({ joint }) {
   )
 }
 
-// Find the mortise + tenon pair to visualize for a given part. Mortises live on
-// legs and carry the rail's name as `label`; tenons live on rails. To draw both
-// halves of a joint we walk all parts to pull the counterpart.
-function viewerPropsFor(part, allParts) {
+// Build viewer props for the part's own joint. Mortise parts pass their own
+// mortise dims; tenon parts pass their own tenon dims. App-level rendering
+// only mounts JointViewer3D for mortise parts (legs), so the tenon branch is
+// kept for completeness.
+function viewerPropsFor(part) {
   const first = part.joints?.[0]
   if (!first) return null
 
-  let mortiseDims, tenonDims, legPart, railPart
   if (first.type === 'mortise') {
-    mortiseDims = first.dimensions
-    legPart  = part
-    railPart = allParts.find(p => p.partName === first.label && p.joints?.some(j => j.type === 'tenon'))
-    tenonDims = railPart?.joints?.find(j => j.type === 'tenon')?.dimensions
-  } else if (first.type === 'tenon') {
-    tenonDims = first.dimensions
-    railPart = part
-    legPart  = allParts.find(p => p.joints?.some(j => j.type === 'mortise' && j.label === part.partName))
-    mortiseDims = legPart?.joints?.find(j => j.type === 'mortise' && j.label === part.partName)?.dimensions
-  } else {
-    return null
+    return {
+      mortise:      first.dimensions,
+      legThickness: part?.stock?.actual?.thickness ?? 3.5,
+    }
   }
-
-  if (!mortiseDims || !tenonDims) return null
-  return {
-    mortise:       mortiseDims,
-    tenon:         tenonDims,
-    legThickness:  legPart?.stock?.actual?.thickness  ?? 3.5,
-    railWidth:     railPart?.stock?.actual?.width     ?? 3.0,
+  if (first.type === 'tenon') {
+    return {
+      tenon:     first.dimensions,
+      railWidth: part?.stock?.actual?.width ?? 3.0,
+    }
   }
+  return null
 }
 
 function downloadGcode(gcode, filename = 'cut-plan.nc') {
@@ -135,6 +132,7 @@ export default function App() {
   const [error,       setError      ] = useState(null)
   const [dragOver,    setDragOver   ] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [simulatedPart, setSimulatedPart] = useState(null)
   const fileInputRef = useRef()
 
   const loadImage = useCallback((file) => {
@@ -158,7 +156,7 @@ export default function App() {
   const handleSubmit = async () => {
     if (mode === 'text' && !prompt.trim()) { setError('Please enter a project description.'); return }
     if (mode === 'image' && !imageBase64)  { setError('Please upload an image.'); return }
-    setLoading(true); setError(null); setResult(null)
+    setLoading(true); setError(null); setResult(null); setSimulatedPart(null)
     try {
       const body = {
         units,
@@ -276,35 +274,60 @@ export default function App() {
               <tbody>
                 {result.parts.map((p, i) => {
                   const cd = p.cutDimensions || {}
-                  const viewerProps = viewerPropsFor(p, result.parts)
+                  const viewerProps = viewerPropsFor(p)
+                  const isMortisePart = p.joints?.[0]?.type === 'mortise'
+                  const partKey = p.partName || p.name || `part-${i}`
+                  const hasGcode = typeof p.gcode === 'string' && p.gcode.trim().length > 0
+                  const isSimulating = simulatedPart === partKey
                   return (
-                    <tr key={i} style={i % 2 === 1 ? styles.trEven : {}}>
-                      <td style={styles.td}><strong>{p.partName || p.name}</strong></td>
-                      <td style={styles.td}>{p.qty ?? '—'}</td>
-                      <td style={styles.td}>
-                        {p.stock ? (
-                          <>
-                            <div style={{ fontWeight: 600 }}>{p.stock.nominal}</div>
-                            <div style={{ color: '#666', fontSize: 12 }}>{p.stock.actual?.thickness}" × {p.stock.actual?.width}"</div>
-                          </>
-                        ) : '—'}
-                      </td>
-                      <td style={styles.td}>{cd.length?.toFixed(4) ?? (p.length ?? '—')}</td>
-                      <td style={styles.td}>{cd.width?.toFixed(4) ?? (p.width ?? '—')}</td>
-                      <td style={styles.td}>{cd.thickness?.toFixed(4) ?? (p.thickness ?? '—')}</td>
-                      <td style={styles.td}>
-                        {p.joints?.length > 0
-                          ? p.joints.map((j, ji) => <JointDetail key={ji} joint={j} />)
-                          : <span style={{ color: '#999' }}>none</span>}
-                        {viewerProps && <JointViewer3D {...viewerProps} />}
-                        {(p.notes || []).map((n, ni) => (
-                          <div key={`n${ni}`} style={styles.note}>{n}</div>
-                        ))}
-                        {(p.warnings || []).map((w, wi) => (
-                          <div key={`w${wi}`} style={styles.warn}>{w}</div>
-                        ))}
-                      </td>
-                    </tr>
+                    <Fragment key={i}>
+                      <tr style={i % 2 === 1 ? styles.trEven : {}}>
+                        <td style={styles.td}><strong>{p.partName || p.name}</strong></td>
+                        <td style={styles.td}>{p.qty ?? '—'}</td>
+                        <td style={styles.td}>
+                          {p.stock ? (
+                            <>
+                              <div style={{ fontWeight: 600 }}>{p.stock.nominal}</div>
+                              <div style={{ color: '#666', fontSize: 12 }}>{toFraction(p.stock.actual?.thickness)} × {toFraction(p.stock.actual?.width)}</div>
+                            </>
+                          ) : '—'}
+                        </td>
+                        <td style={styles.td}>{toFraction(cd.length ?? p.length) || '—'}</td>
+                        <td style={styles.td}>{toFraction(cd.width  ?? p.width)  || '—'}</td>
+                        <td style={styles.td}>{toFraction(cd.thickness ?? p.thickness) || '—'}</td>
+                        <td style={styles.td}>
+                          {p.joints?.length > 0
+                            ? p.joints.map((j, ji) => <JointDetail key={ji} joint={j} />)
+                            : <span style={{ color: '#999' }}>none</span>}
+                          {viewerProps && isMortisePart && <JointViewer3D {...viewerProps} />}
+                          {(p.notes || []).map((n, ni) => (
+                            <div key={`n${ni}`} style={styles.note}>{n}</div>
+                          ))}
+                          {(p.warnings || []).map((w, wi) => (
+                            <div key={`w${wi}`} style={styles.warn}>{w}</div>
+                          ))}
+                          {hasGcode && (
+                            <button
+                              style={styles.simBtn(isSimulating)}
+                              onClick={() => setSimulatedPart(isSimulating ? null : partKey)}
+                            >
+                              {isSimulating ? 'Hide simulator' : 'Simulate'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {isSimulating && hasGcode && (
+                        <tr style={styles.simRow}>
+                          <td colSpan={7} style={styles.simCell}>
+                            <ToolpathSimulator
+                              gcode={p.gcode}
+                              partName={p.partName || p.name}
+                              stockDimensions={p.cutDimensions}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   )
                 })}
               </tbody>

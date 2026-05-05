@@ -1,0 +1,20 @@
+[project]
+name = "cnc-renderer"
+version = "0.1.0"
+description = "Render furniture parts (STEP + GLB) from joineryEngine.js cut list output"
+requires-python = ">=3.12"
+dependencies = [
+    "build123d>=0.10",
+    "trimesh",
+    "numpy",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["render"]

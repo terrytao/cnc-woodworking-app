@@ -201,6 +201,81 @@ function generateGcode(partName, mortise, stockThickness) {
   return lines.join('\n')
 }
 
+function generateTenonGcode(partName, tenon, stockDimensions) {
+  const shoulderDepth  = tenon.dimensions.length
+  const shoulderHeight = SHOULDER_SIZE
+  const cheekWidth     = tenon.dimensions.thickness
+  const stockWidth     = stockDimensions.width
+  const stockThickness = stockDimensions.thickness
+  const cheekDepth     = (stockWidth - tenon.dimensions.width) / 2
+  const safeZ          = 0.1
+  const lines          = []
+
+  const shoulderPasses = Math.max(1, Math.ceil(shoulderHeight / 0.25))
+  const cheekPasses    = Math.max(1, Math.ceil(cheekDepth / 0.25))
+
+  lines.push(`; =========================================`)
+  lines.push(`; Tenon: ${partName}`)
+  lines.push(`; Thickness=${fmt(cheekWidth)}" Width=${fmt(tenon.dimensions.width)}" Length=${fmt(shoulderDepth)}"`)
+  lines.push(`; Stock: ${fmt(stockThickness)}" × ${fmt(stockWidth)}"`)
+  lines.push(`; =========================================`)
+  lines.push(`G20 G17 G90`)
+  lines.push(`S18000 M3`)
+  lines.push(`G0 Z${safeZ.toFixed(4)}`)
+
+  // 1. Top shoulder cut — horizontal pass across top of rail end
+  lines.push(`; --- Top shoulder cut ---`)
+  for (let pass = 1; pass <= shoulderPasses; pass++) {
+    const cutZ = -Math.min(pass * 0.25, shoulderHeight)
+    lines.push(`; Pass ${pass} of ${shoulderPasses}`)
+    lines.push(`G0 X0.0000 Y${fmt(stockWidth)}`)
+    lines.push(`G1 Z${cutZ.toFixed(4)} F50`)
+    lines.push(`G1 X${fmt(shoulderDepth)} F100`)
+    lines.push(`G0 Z${safeZ.toFixed(4)}`)
+  }
+
+  // 2. Bottom shoulder cut — horizontal pass across bottom
+  lines.push(`; --- Bottom shoulder cut ---`)
+  for (let pass = 1; pass <= shoulderPasses; pass++) {
+    const cutZ = -Math.min(pass * 0.25, shoulderHeight)
+    lines.push(`; Pass ${pass} of ${shoulderPasses}`)
+    lines.push(`G0 X0.0000 Y0.0000`)
+    lines.push(`G1 Z${cutZ.toFixed(4)} F50`)
+    lines.push(`G1 X${fmt(shoulderDepth)} F100`)
+    lines.push(`G0 Z${safeZ.toFixed(4)}`)
+  }
+
+  // 3. Front cheek cut — vertical pass along front face
+  lines.push(`; --- Front cheek cut ---`)
+  for (let pass = 1; pass <= cheekPasses; pass++) {
+    const cutZ = -Math.min(pass * 0.25, cheekDepth)
+    lines.push(`; Pass ${pass} of ${cheekPasses}`)
+    lines.push(`G0 X0.0000 Y0.0000`)
+    lines.push(`G1 Z${cutZ.toFixed(4)} F50`)
+    lines.push(`G1 X${fmt(shoulderDepth)} F100`)
+    lines.push(`G0 Z${safeZ.toFixed(4)}`)
+  }
+
+  // 4. Back cheek cut — vertical pass along back face
+  lines.push(`; --- Back cheek cut ---`)
+  for (let pass = 1; pass <= cheekPasses; pass++) {
+    const cutZ = -Math.min(pass * 0.25, cheekDepth)
+    lines.push(`; Pass ${pass} of ${cheekPasses}`)
+    lines.push(`G0 X0.0000 Y${fmt(stockWidth)}`)
+    lines.push(`G1 Z${cutZ.toFixed(4)} F50`)
+    lines.push(`G1 X${fmt(shoulderDepth)} F100`)
+    lines.push(`G0 Z${safeZ.toFixed(4)}`)
+  }
+
+  lines.push(`M5`)
+  lines.push(`G0 Z1.0`)
+  lines.push(`M30`)
+  lines.push(`; End ${partName}`)
+  lines.push(``)
+
+  return lines.join('\n')
+}
+
 // ─── Core joint calculator ────────────────────────────────────────────────────
 function calculateJoints(legPart, railPart, legStock, railStock) {
   const legThickness  = legStock.actual.thickness
@@ -269,8 +344,25 @@ function calculateJoints(legPart, railPart, legStock, railStock) {
   const mortiseX = roundTo64th((legThickness - mortiseWidth) / 2)
   const mortiseY = roundTo64th(SHOULDER_SIZE)
 
-  const mortiseDims = { width: mortiseWidthComp, length: mortiseLengthComp, depth: mortiseDepth }
-  const tenonDims   = { thickness: tenonThickComp, length: rawTenonLength, width: tenonWidthComp }
+  // Output emits two reference frames per JOINERY_BUG_INVESTIGATION fix #2:
+  // the kerf-compensated toolpath dims (width / length / thickness — used
+  // by the gcode generator and existing CNC consumers) and the pre-comp
+  // finished dims (finished*) — what calipers measure on the actual joint.
+  // Hand-tool consumers should read the finished* values.
+  const mortiseDims = {
+    width:          mortiseWidthComp,
+    length:         mortiseLengthComp,
+    depth:          mortiseDepth,
+    finishedWidth:  mortiseWidth,
+    finishedLength: mortiseLength,
+  }
+  const tenonDims = {
+    thickness:         tenonThickComp,
+    length:            rawTenonLength,
+    width:             tenonWidthComp,
+    finishedThickness: tenonThickness,
+    finishedWidth:     tenonWidth,
+  }
 
   const dogBones = dogBonesForMortise(mortiseX, mortiseY, mortiseWidthComp, mortiseLengthComp)
 
@@ -401,6 +493,14 @@ function processPartsArray(parts) {
         .filter(j => j.type === 'mortise')
         .map(j => generateGcode(leg.partName, j, leg.stock.actual.thickness))
         .join('\n')
+    }
+
+    // Generate tenon G-code for each rail
+    for (const rail of rails) {
+      const tenonJoint = rail.joints.find(j => j.type === 'tenon')
+      if (tenonJoint) {
+        rail.gcode = generateTenonGcode(rail.partName, tenonJoint, rail.stock.actual)
+      }
     }
 
     // Assign tenon to ambiguous parts using the first rail's joint as a template.

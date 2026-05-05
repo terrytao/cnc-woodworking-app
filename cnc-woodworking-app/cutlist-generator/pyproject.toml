@@ -1,0 +1,30 @@
+[project]
+name = "cutlist-generator"
+version = "0.1.0"
+description = "Hand-tool-friendly cut list (HTML + PDF) from joineryEngine.js JSON output"
+requires-python = ">=3.12"
+dependencies = [
+    "weasyprint>=62",
+    "jinja2>=3",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+cutlist = ["../templates/*.jinja", "../templates/*.css"]
+
+[project.scripts]
+cutlist = "cutlist.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
