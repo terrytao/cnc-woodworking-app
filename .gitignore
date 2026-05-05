@@ -1,2 +1,16 @@
+node_modules/
+dist/
+.env
+.env.local
+*.local
+cdk.out/
+cdk-outputs.json
 .DS_Store
-*.zip
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+output/
